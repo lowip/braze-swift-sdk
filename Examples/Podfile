@@ -1,0 +1,48 @@
+# source 'https://cdn.cocoapods.org/'
+source 'https://github.com/CocoaPods/Specs.git'
+
+project 'Examples-CocoaPods'
+
+target 'Analytics-iOS' do
+  platform :ios, '10.0'
+  pod 'BrazeKitDev'
+end
+
+target 'Analytics-tvOS' do
+  platform :tvos, '10.0'
+  pod 'BrazeKitDev'
+end
+
+target 'InAppMessages' do
+  platform :ios, '10.0'
+  pod 'BrazeKitDev'
+  pod 'BrazeUIDev'
+  pod 'SDWebImage', :modular_headers => true
+end
+
+target 'Location-iOS' do
+  platform :ios, '10.0'
+  pod 'BrazeKitDev'
+  pod 'BrazeLocationDev'
+end
+
+target 'Location-tvOS' do
+  platform :tvos, '10.0'
+  pod 'BrazeKitDev'
+  pod 'BrazeLocationDev'
+end
+
+target 'PushNotifications' do
+  platform :ios, '10.0'
+  pod 'BrazeKitDev'
+end
+
+target 'PushNotificationsServiceExtension' do
+  platform :ios, '10.0'
+  pod 'BrazeNotificationServiceDev'
+end
+
+target 'PushNotificationsContentExtension' do
+  platform :ios, '10.0'
+  pod 'BrazePushStoryDev'
+end
