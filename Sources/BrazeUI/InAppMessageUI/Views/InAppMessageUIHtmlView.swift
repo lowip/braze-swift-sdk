@@ -10,7 +10,15 @@ extension BrazeInAppMessageUI {
   open class HtmlView: UIView, InAppMessageView {
 
     /// The html in-app message.
-    public var message: Braze.InAppMessage.Html
+    public var message: Braze.InAppMessage.Html {
+      get { messageWrapper.wrappedValue }
+      set {
+        messageWrapper.wrappedValue = newValue
+      }
+    }
+
+    /// Internal wrapper for the html in-app message.
+    let messageWrapper: MessageWrapper<Braze.InAppMessage.Html>
 
     // MARK: - Attributes
 
@@ -42,6 +50,9 @@ extension BrazeInAppMessageUI {
       ///
       /// Deeplinks (e.g. `customAppScheme://`) always dismiss the message.
       public var linkTargetSupport: Bool = true
+
+      /// Specifies whether the web view should support the Web Inspector developer tool, if available.
+      public var allowInspector: Bool = true
 
       /// Closure allowing customization of the configuration used by the web view.
       public var configure: ((WKWebViewConfiguration) -> Void)?
@@ -112,7 +123,17 @@ extension BrazeInAppMessageUI {
     public lazy var scriptMessageHandler: Braze.WebViewBridge.ScriptMessageHandler =
       webViewScriptMessageHandler()
     public lazy var schemeHandler: Braze.WebViewBridge.SchemeHandler = webViewSchemeHandler()
-    public lazy var queryHandler: Braze.WebViewBridge.QueryHandler = webViewQueryHandler()
+    public var queryHandler: Braze.WebViewBridge.QueryHandler {
+      get {
+        queryHandlerWrapper.wrappedValue
+      }
+      set {
+        queryHandlerWrapper.wrappedValue = newValue
+      }
+    }
+
+    lazy var queryHandlerWrapper: MessageWrapper<Braze.WebViewBridge.QueryHandler> = .init(
+      wrappedValue: webViewQueryHandler())
 
     // MARK: - LifeCycle
 
@@ -121,7 +142,7 @@ extension BrazeInAppMessageUI {
       attributes: Attributes = .defaults,
       presented: Bool = false
     ) {
-      self.message = message
+      self.messageWrapper = .init(wrappedValue: message)
       self.attributes = attributes
       self.presented = presented
       super.init(frame: .zero)
@@ -269,6 +290,13 @@ extension BrazeInAppMessageUI {
       webView.scrollView.bounces = false
       webView.backgroundColor = .clear
       webView.isOpaque = false
+
+      #if compiler(>=5.8)
+        if #available(iOS 16.4, macOS 13.3, *) {
+          webView.isInspectable = attributes.allowInspector
+        }
+      #endif
+
       // Disable this optimization for mac catalyst (force webview in window bounds)
       #if !targetEnvironment(macCatalyst)
         if #available(iOS 11.0, *) {
@@ -286,7 +314,7 @@ extension BrazeInAppMessageUI {
     open func loadMessage() {
       guard let baseURL = message.baseURL else {
         logError(.htmlNoBaseURL)
-        message.animateOut = false
+        messageWrapper.wrappedValue.animateOut = false
         dismiss()
         return
       }
@@ -300,7 +328,7 @@ extension BrazeInAppMessageUI {
 
       // Write index.html
       let index = baseURL.appendingPathComponent("index.html")
-      try? message.message.write(to: index, atomically: true, encoding: .utf8)
+      try? messageWrapper.wrappedValue.message.write(to: index, atomically: true, encoding: .utf8)
 
       // Load
       webView?.loadFileURL(index, allowingReadAccessTo: baseURL)
@@ -400,7 +428,7 @@ extension BrazeInAppMessageUI.HtmlView: WKNavigationDelegate {
     withError error: Error
   ) {
     logError(.webViewNavigation(.init(error)))
-    message.animateOut = false
+    messageWrapper.wrappedValue.animateOut = false
     dismiss()
   }
 
